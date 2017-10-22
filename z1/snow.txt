@@ -1,0 +1,5 @@
+step=15
+ugol=60
+F=>G++G
+G=>F-F
+

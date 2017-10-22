@@ -1,0 +1,13 @@
+SOURCES += \
+        main.cpp \
+        compiler.cpp \
+    draw.cpp \
+    editer.cpp
+
+HEADERS += compiler.h \
+        draw.h \
+    editer.h 
+
+FORMS += \
+        draw.ui \
+    editer.ui

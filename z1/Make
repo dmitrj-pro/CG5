@@ -1,0 +1,6 @@
+TARGET=Project
+
+PHONE: QT
+
+QT:
+	( cat ./build/p1.txt && echo 'INCLUDEPATH+='$(DPLibInclude) && echo 'LIBS+='$(DPLibLib) &&  cat ./build/p2.txt ) > draw.pro
