@@ -1,0 +1,14 @@
+ugol=60
+depth=5
+point=500 400
+step=10
+start_ugol=60
+
+main=X
+
+F=>FF
+X=>--FXF++FXF++FXF--
+
+
+
+

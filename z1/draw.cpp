@@ -48,9 +48,20 @@ namespace Lan{
     string drawFunc="F";
     double L=ugol;
     std::list<std::pair<double, Point>> Stack;
+    std::list<int> StackDepth;
+    int maxStackDepth=maxdepth;
     std::list<string> labels;
+    string thisfunc="";
 
     Point prev=start;
+
+    string fghld(){
+        string res="";
+        for (auto x = labels.cbegin(); x!= labels.cend(); x++){
+            res += *x+"\n";
+        }
+        return res;
+    }
 
     void clear(){
         depth=0;
@@ -60,7 +71,9 @@ namespace Lan{
         ugol = 0;
         drawFunc="F";
         L=ugol;
+        maxStackDepth = maxdepth;
         Stack.clear();
+        StackDepth.clear();
         labels.clear();
         prev=start;
     }
@@ -70,14 +83,34 @@ namespace Lan{
         string val=par[1];
         if (name == "depth"){
             maxdepth = parse<int>(val);
+            maxStackDepth = maxdepth+1;
             return Error();
         }
         if (name == "step"){
             step=parse<int>(val);
             return Error();
         }
-        if (name == "ugol"){
+        if (name == "main"){
+            drawFunc = val;
+            return Error();
+        }
+        if (name == "start_ugol"){
             double tmp = parse<int>(val);
+            tmp = tmp*3.1415/180;
+            ugol= tmp;
+            return Error();
+        }
+        if (name == "point"){
+            start = Point(parse<double>(val), parse<double>(par[2]));
+            prev=start;
+            return Error();
+        }
+        if (name == "exec"){
+            drawFunc = val;
+            return Error();
+        }
+        if (name == "ugol"){
+            double tmp = parse<double>(val);
             tmp = tmp*3.1415/180;
             L = tmp;
             return Error();
@@ -85,51 +118,121 @@ namespace Lan{
         return Error(Error::TypeError::CRYTICAL, "Non found parametr");
     }
     Error SAVE(Language& , const vector<string>&par){
-        Stack.push_back(std::pair<double, Point>(ugol, prev));
+        logl("save");
         labels.push_back(par[0]);
         return Error();
     }
+    Error SAVE_POS(Language&, const vector<string>&){
+        logl("save position");
+        Stack.push_back(std::pair<double, Point>(ugol, prev));
+        return Error();
+    }
+
     Error RET(Language&lan, const vector<string>&g){
+        logl("ret");
+        if (StackDepth.size() == (maxStackDepth-1)){
+            labels.pop_back();
+        }
+#ifdef DP_DEBUG
         auto fdf=labels;
-        depth--;
+        auto sssdd = StackDepth;
+        string ddd =fghld();
+#endif
+        if (labels.size() == 0){
+            vector<string> tmp;
+            tmp.push_back("end");
+            DP::AS::jmp(lan, tmp);
+            return Error(DP::AS::Error::TypeError::NoError, "Stack is empty");
+        }
+        //if (thisfunc == drawFunc)
+            depth--;
         string lab = labels.back();
         labels.pop_back();
         vector<string> x;
         x.push_back(lab);
         DP::AS::jmp(lan,x);
+        return Error();
+    }
+
+    Error POP(Language&lan, const vector<string>&g){
+        logl("ret");
+        labels.pop_back();
+        return Error();
+    }
+    Error RET_no_depth(Language&lan, const vector<string>&g){
+        logl("ret_no_depth");
+        string ddd =fghld();
+        string lab = labels.back();
+        labels.pop_back();
+        vector<string> x;
+        x.push_back(lab);
+        DP::AS::jmp(lan,x);
+        return Error();
     }
     Error EXEC(Language& lan, const vector<string>&par){
         string name = par[0];
-        if (name == drawFunc){
-            double x= step*std::cos(ugol);
-            double y = step*std::sin(ugol);
+        Dlog("exec");
+        logl(name);
+        string ddd =fghld();
+        //if (StackDepth.size() >= maxStackDepth)
+          //  return RET_no_depth(lan, par);
+        if (name == drawFunc && depth == maxdepth){
+            logl("draw");
+            double x= ((double)step)*std::cos(ugol);
+            double y = ((double)step)*std::sin(ugol);
+            double tmp = std::sqrt(x*x+y*y);
             scen->addLine(prev.x,prev.y, x+prev.x, y + prev.y);
-            Dlog(x);
-            Dlog(y);
-            Dlog(std::sqrt(x*x+y*y));
-            Dlog(prev.x);
-            Dlog(prev.y);
             logl("");
             prev=Point(x+prev.x, y + prev.y);
         }
-        depth++;
+        //if (name == drawFunc)
+            depth++;
         if (depth > maxdepth)
             return RET(lan, par);
+        thisfunc = par[0];
         DP::AS::jmp(lan,par);
         return Error();
     }
-    Error LOAD(Language&, const vector<string>&){
+    Error LOAD(Language&lan, const vector<string>&){
+        logl("load");
+#ifdef DP_DEBUG
+        auto sss = Stack;
+        auto ddd = labels;
+#endif
+        if (Stack.size() == 0){
+            vector<string> tmp;
+            tmp.push_back("end");
+            DP::AS::jmp(lan, tmp);
+            return Error(DP::AS::Error::TypeError::NoError, "Stack is empty");
+        }
         auto tmp = Stack.back();
         Stack.pop_back();
+        int tmp_depth = StackDepth.back();
+        depth = tmp_depth;
+        StackDepth.pop_back();
         ugol=tmp.first;
         prev=tmp.second;
         return Error();
     }
+    Error PUSH_STACK(Language& lan, const vector<string>&f){
+        if ((StackDepth.size()) >= maxStackDepth){
+            return RET_no_depth(lan, f);
+        }
+        logl("reset_depth");
+        StackDepth.push_back(depth);
+        depth=0;
+        return Error();
+    }
+
     Error LEFT(Language&, const vector<string>&){
+        logl("left");
         ugol+=L;
+        return Error();
     }
     Error RIGHT(Language&, const vector<string>&){
+        logl("right");
         ugol-=L;
+        return Error();
     }
 
 
@@ -143,8 +246,9 @@ void LoadCommandUser(DP::AS::Language& as){
     as.addFunction("LEFT", Lan::LEFT,0);
     as.addFunction("RIGHT", Lan::RIGHT,0);
     as.addFunction("RET", Lan::RET,0);
-
-
+    as.addFunction("POP", Lan::POP,0);
+    as.addFunction("PUSH_STACK", Lan::PUSH_STACK, 0);
+    as.addFunction("SAVE_POS", Lan::SAVE_POS, 0);
 }
 
 Draw::Draw(QWidget *parent) :
@@ -165,7 +269,7 @@ void Draw::Exec(){
     DP::AS::Language l;
     l.loadCore();
     l.read("fff.txt");
-    Lan::scen = new QGraphicsScene(ui->graphicsView->sceneRect(),this);
+    Lan::scen = new QGraphicsScene(0,0, this->size().rwidth(), this->size().rheight(),this);
     ui->graphicsView->setScene(Lan::scen);
 #ifdef DP_DEBUG
     cout << l;

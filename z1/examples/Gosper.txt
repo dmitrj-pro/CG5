@@ -1,0 +1,11 @@
+ugol=60
+depth=6
+point=600 150
+step=4
+main=Start
+
+Start=>XF
+
+F=>F
+X=>X+YF++YF-FX--FXFX-YF+
+Y=>-FX+YFYF++YF+FX--FX-Y
