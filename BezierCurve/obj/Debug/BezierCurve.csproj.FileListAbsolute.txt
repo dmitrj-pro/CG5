@@ -12,7 +12,7 @@ C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.exe
 C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.pdb
 C:\Programming\C#\CG5\BezierCurve\bin\Debug\BezierCurve.exe
 C:\Programming\C#\CG5\BezierCurve\bin\Debug\BezierCurve.pdb
-C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.csprojResolveAssemblyReference.cache
 C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.Form1.resources
 C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.Properties.Resources.resources
 C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.csproj.GenerateResource.Cache
+C:\Programming\C#\CG5\BezierCurve\obj\Debug\BezierCurve.csprojResolveAssemblyReference.cache
