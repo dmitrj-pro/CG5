@@ -1,0 +1,10 @@
+ugol=22.5
+depth=6
+point=700 900
+step=3
+start_ugol=-90
+
+main=X
+
+X=>F-[[X]+X]+F[+FX]-X
+F=>FF

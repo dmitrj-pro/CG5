@@ -83,7 +83,7 @@ namespace Lan{
         string val=par[1];
         if (name == "depth"){
             maxdepth = parse<int>(val);
-            maxStackDepth = maxdepth+1;
+            maxStackDepth = maxdepth;
             return Error();
         }
         if (name == "step"){
@@ -127,12 +127,30 @@ namespace Lan{
         Stack.push_back(std::pair<double, Point>(ugol, prev));
         return Error();
     }
+    Error LOAD_POS(Language&lan, const vector<string>&){
+        logl("load position");
+#ifdef DP_DEBUG
+        auto sss = Stack;
+        auto ddd = labels;
+#endif
+        if (Stack.size() == 0){
+            vector<string> tmp;
+            tmp.push_back("end");
+            DP::AS::jmp(lan, tmp);
+            return Error(DP::AS::Error::TypeError::NoError, "Stack is empty");
+        }
+        auto tmp = Stack.back();
+        ugol=tmp.first;
+        prev=tmp.second;
+        Stack.pop_back();
+        return Error();
+    }
 
     Error RET(Language&lan, const vector<string>&g){
         logl("ret");
-        if (StackDepth.size() == (maxStackDepth-1)){
-            labels.pop_back();
-        }
+        //if (StackDepth.size() == (maxStackDepth-1)){
+          //  labels.pop_back();
+        //}
 #ifdef DP_DEBUG
         auto fdf=labels;
         auto sssdd = StackDepth;
@@ -161,7 +179,9 @@ namespace Lan{
     }
     Error RET_no_depth(Language&lan, const vector<string>&g){
         logl("ret_no_depth");
-        string ddd =fghld();
+        #ifdef DP_DEBUG
+            string ddd =fghld();
+        #endif
         string lab = labels.back();
         labels.pop_back();
         vector<string> x;
@@ -169,6 +189,48 @@ namespace Lan{
         DP::AS::jmp(lan,x);
         return Error();
     }
+    Error DRAW(Language&, const vector<string> &){
+        logl("draw");
+        double x= ((double)step)*std::cos(ugol);
+        double y = ((double)step)*std::sin(ugol);
+        double tmp = std::sqrt(x*x+y*y);
+        scen->addLine(prev.x,prev.y, x+prev.x, y + prev.y);
+        logl("");
+        prev=Point(x+prev.x, y + prev.y);
+        return Error();
+    }
+
+    Error RUN(Language& lan, const vector<string>&par) {
+        Dlog("run " + par[1]);
+        string save= par[0];
+        string run = par[1];
+#ifdef DP_DEBUG
+        auto& fdf=labels;
+        auto& sssdd = StackDepth;
+        string ddd =fghld();
+#endif
+        Stack.push_back(std::pair<double, Point>(ugol, prev));
+        StackDepth.push_back(depth);
+
+        depth++;
+        if (depth > (maxdepth+1)){
+            vector<string> tmp;
+            tmp.push_back(save);
+            return DP::AS::jmp(lan, tmp);
+        }
+
+        if ((StackDepth.size()) > maxStackDepth){
+            vector<string> tmp;
+            tmp.push_back(save);
+            return DP::AS::jmp(lan, tmp);
+        }
+        depth=StackDepth.size()+1;
+        labels.push_back(save);
+        vector<string> tmp;
+        tmp.push_back(run);
+        return DP::AS::jmp(lan, tmp);
+    }
+
     Error EXEC(Language& lan, const vector<string>&par){
         string name = par[0];
         Dlog("exec");
@@ -206,12 +268,14 @@ namespace Lan{
             return Error(DP::AS::Error::TypeError::NoError, "Stack is empty");
         }
         auto tmp = Stack.back();
+        ugol=tmp.first;
+        prev=tmp.second;
         Stack.pop_back();
+
         int tmp_depth = StackDepth.back();
         depth = tmp_depth;
         StackDepth.pop_back();
-        ugol=tmp.first;
-        prev=tmp.second;
+
         return Error();
     }
     Error PUSH_STACK(Language& lan, const vector<string>&f){
@@ -220,7 +284,7 @@ namespace Lan{
         }
         logl("reset_depth");
         StackDepth.push_back(depth);
-        depth=0;
+        depth=-1;
         return Error();
     }
 
@@ -248,7 +312,10 @@ void LoadCommandUser(DP::AS::Language& as){
     as.addFunction("RET", Lan::RET,0);
     as.addFunction("POP", Lan::POP,0);
     as.addFunction("PUSH_STACK", Lan::PUSH_STACK, 0);
+    as.addFunction("LOAD_POS", Lan::LOAD_POS, 0);
     as.addFunction("SAVE_POS", Lan::SAVE_POS, 0);
+    as.addFunction("DRAW", Lan::DRAW, 0);
+    as.addFunction("RUN", Lan::RUN, 2);
 }
 
 Draw::Draw(QWidget *parent) :
@@ -271,9 +338,7 @@ void Draw::Exec(){
     l.read("fff.txt");
     Lan::scen = new QGraphicsScene(0,0, this->size().rwidth(), this->size().rheight(),this);
     ui->graphicsView->setScene(Lan::scen);
-#ifdef DP_DEBUG
-    cout << l;
-#endif
+    Dlog(l);
     l.exec("main");
 
 }

@@ -1,8 +1,10 @@
 ugol=22
-depth=4
-point=700 700
-step=30
+point=700 900
+step=20
 start_ugol=-90
+depth=4
+
 main=R
+
 R=>F
 F=>FF-[-F+F+F]+[+F-F-F]

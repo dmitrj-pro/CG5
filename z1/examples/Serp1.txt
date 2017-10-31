@@ -2,26 +2,9 @@ ugol=60
 depth=8
 point=20 700
 step=3
+
 main=Start
 
 Start=>FXF--FF--FF
 F=>FF
 X=>--FXF++FXF++FXF--
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

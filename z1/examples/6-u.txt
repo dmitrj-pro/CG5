@@ -1,0 +1,23 @@
+ugol=60
+depth=20
+point=700 700
+step=10
+start_ugol=-90
+
+
+main=X
+
+F=>F
+X=>[-F+F[Y]+F][+F-F[Y]-F]
+Y=>[-F+F[Y]+F][+F-F-F]
+
+
+
+
+
+
+
+
+
+
+

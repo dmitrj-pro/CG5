@@ -2,30 +2,9 @@ ugol=60
 depth=14
 point=-200 700
 step=1
+
 main=Start
 
 Start=>Z++Z
 F=>Z++Z
 Z=>F-F
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

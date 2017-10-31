@@ -1,7 +1,7 @@
 ugol=60
 depth=6
-point=600 150
-step=4
+point=800 150
+step=6
 main=Start
 
 Start=>XF
