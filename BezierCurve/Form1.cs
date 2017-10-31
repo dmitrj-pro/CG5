@@ -171,7 +171,7 @@ namespace BezierCurve
 
                 lcount += 1;
                 Random r = new Random();
-                l.BackColor = Color.FromArgb(r.Next(256), r.Next(256), r.Next(256));
+                l.BackColor = Color.FromArgb(r.Next(200), r.Next(200), r.Next(200));
                 l.AutoSize = false;
                 l.Size = new Size(10, 10);
                 l.ForeColor = Color.Transparent;
