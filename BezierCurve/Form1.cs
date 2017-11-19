@@ -17,7 +17,6 @@ namespace BezierCurve
         private Point StartPoint;
         private bool IsMouseDown = false;
         private List<Point> Points = new List<Point>();
-        private List<Point> Curve = new List<Point>();
         private bool EditMode = false;
         private int lcount = 4;
 
@@ -31,8 +30,7 @@ namespace BezierCurve
             pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
             Graphics graphics = Graphics.FromImage(pictureBox1.Image);
             graphics.Clear(Color.AliceBlue);
-            bezier();
-            draw();
+            Draw();
         }
 
         private void l_MouseDown(object sender, MouseEventArgs e)
@@ -45,6 +43,7 @@ namespace BezierCurve
                 l.BringToFront();
                 StartPoint = e.Location;
             }
+            Cursor.Current = Cursors.Hand;
             if (e.Button == MouseButtons.Right && EditMode)
             {
                 int ind;
@@ -53,6 +52,91 @@ namespace BezierCurve
                 Points[ind] = new Point(-1, -1);
             }
         }
+
+        private void Draw()
+        {
+            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
+            graphics.Clear(Color.AliceBlue);
+            BezierCurve(Points);
+        }
+
+        private Point Middle(Point p1, Point p2)
+        {
+            int x, y;
+            if (p1.X < p2.X)
+                x = (p2.X - p1.X) / 2 + p1.X;
+            else
+                x = (p1.X - p2.X) / 2 + p2.X;
+            if (p1.Y < p2.Y)
+                y = (p2.Y - p1.Y) / 2 + p1.Y;
+            else
+                y = (p1.Y - p2.Y) / 2 + p2.Y;
+            return new Point(x, y);
+        }
+
+        private void BezierCurve(List<Point> points)
+        {
+            List<Point> curr_points = new List<Point>(Points);
+
+            curr_points.RemoveAll(item => item.X == -1);
+
+            Bitmap bmp = pictureBox1.Image as Bitmap;
+
+            var temp_points = new List<Point>(curr_points);
+
+            if (curr_points.Count > 4)
+            {
+                int count = 0;
+                if (curr_points.Count < 8)
+                {
+                    count = 8 - curr_points.Count;
+                }
+                else
+                {
+                    if (curr_points.Count % 2 == 1)
+                        count = 1;
+                    else
+                        count = 0;
+                }
+
+                for (int i = 1; i <= count; i++)
+                    temp_points.Add(curr_points[curr_points.Count - 1]);
+
+                for (int i = 2; i < temp_points.Count - 3; i += 2)
+                {
+                    var p = Middle(temp_points[i], temp_points[i + 1]);
+                    temp_points.Insert(i + 1, p);
+                    i += 1;
+                }
+            }
+
+            int ind = 0;
+            Point p0, p1, p2, p3;
+            while (temp_points.Count > ind + 3)
+            {
+                p0 = temp_points[ind];
+                p1 = temp_points[ind + 1];
+                p2 = temp_points[ind + 2];
+                p3 = temp_points[ind + 3];
+                ind += 3;
+                for (double t = 0; t <= 1; t += 0.001)
+                {
+                    double curr_x = (1 - t) * (1 - t) * (1 - t) * p0.X +
+                                3 * t * (1 - t) * (1 - t) * p1.X +
+                                3 * t * t * (1 - t) * p2.X +
+                                t * t * t * p3.X;
+
+                    double curr_y = (1 - t) * (1 - t) * (1 - t) * p0.Y +
+                                3 * t * (1 - t) * (1 - t) * p1.Y +
+                                3 * t * t * (1 - t) * p2.Y +
+                                t * t * t * p3.Y;
+
+                    bmp.SetPixel((int)curr_x, (int)curr_y, Color.Red);
+                }
+            }
+            pictureBox1.Refresh();
+        }
+
 
         private void l_MouseMove(object sender, MouseEventArgs e)
         {
@@ -64,8 +148,7 @@ namespace BezierCurve
                 int ind;
                 int.TryParse(l.Name.Split('_')[1], out ind);
                 Points[ind] = new Point(l.Location.X, l.Location.Y);
-                bezier();
-                draw();
+                Draw();
             }
             else if (IsMouseDown && EditMode)
             {
@@ -80,50 +163,6 @@ namespace BezierCurve
         private void l_MouseUp(object sender, MouseEventArgs e)
         {
             IsMouseDown = false;
-        }
-
-        private void draw()
-        {
-            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
-            graphics.Clear(Color.AliceBlue);
-            Pen pen = new Pen(Color.Black);
-            pen.StartCap = pen.EndCap = LineCap.Round;
-            for (int i = 1; i < Curve.Count; i++) 
-            {
-                graphics.DrawEllipse(pen, new Rectangle(Curve[i].X, Curve[i].Y, 1, 1));
-                graphics.DrawLine(pen, Curve[i], Curve[i - 1]);
-            }
-
-            pictureBox1.Refresh();
-        }
-
-        private void bezier()
-        {
-            Curve.Clear();
-            List<Point> lst = new List<Point>(Points);
-            lst.RemoveAll(item => item.X == -1);
-            int currX;
-            int currY;
-            for (int i = 3; i < lst.Count; i += 3)
-            {
-                for (double t = 0; t <= 1; t += 0.0001)
-                {
-
-                    /*x = (1 − t)³⋅x1 + 3⋅(1 − t)²⋅t⋅x2 + 3⋅(1 − t)⋅t²⋅x3 + t³⋅x4,
-                   y = (1 − t)³⋅y1 + 3⋅(1 − t)²⋅t⋅y2 + 3⋅(1 − t)⋅t²⋅y3 + t³⋅y4,*/
-
-
-                    currX = (int)((1 - t) * (1 - t) * (1 - t) * lst[i - 3].X +
-                       3 * t * (1 - t) * (1 - t) * lst[i - 2].X +
-                       3 * t * t * (1 - t) * lst[i - 1].X +
-                       t * t * t * lst[i].X);
-                    currY = (int)((1 - t) * (1 - t) * (1 - t) * lst[i - 3].Y +
-                        3 * t * (1 - t) * (1 - t) * lst[i - 2].Y +
-                        3 * t * t * (1 - t) * lst[i - 1].Y +
-                        t * t * t * lst[i].Y);
-                    Curve.Add(new Point(currX, currY));
-                }
-            }
         }
 
         private void clearToolStripMenuItem_Click(object sender, EventArgs e)
@@ -150,12 +189,11 @@ namespace BezierCurve
                 List<Point> lst = new List<Point>(Points);
                 lst.RemoveAll(item => item.X == -1);
 
-                if ((lst.Count - 1) % 3 == 0 && lst.Count >= 4)
+                if (lst.Count >= 4)
                 {
                     EditMode = false;
                     editToolStripMenuItem.Text = "Edit";
-                    bezier();
-                    draw();
+                    Draw();
                 }
             }
         }
@@ -181,6 +219,41 @@ namespace BezierCurve
                 Controls.Add(l);
                 l.BringToFront();
             }
+        }
+
+        private void clearToolStripMenuItem_Click_1(object sender, EventArgs e)
+        {
+            Points.Clear();
+            editToolStripMenuItem.Text = "Edit";
+            EditMode = false;
+            List<Label> l = new List<Label>();
+            foreach (Label obj in Controls.OfType<Label>())
+            {
+                int ind;
+                int.TryParse(obj.Name.Split('_')[1], out ind);
+                if (ind >= 4)
+                {
+                    l.Add(obj);
+                    //Controls.Remove(obj);
+
+                }
+
+            }
+            for (int i = 0; i < l.Count; i++)
+                Controls.Remove(l[i]);
+            lcount = 4;
+            l_0.Location = new Point(63, 274);
+            l_1.Location = new Point(142, 150);
+            l_2.Location = new Point(295, 302);
+            l_3.Location = new Point(366, 196);
+            Points.Add(l_0.Location);
+            Points.Add(l_1.Location);
+            Points.Add(l_2.Location);
+            Points.Add(l_3.Location);
+            pictureBox1.Image = new Bitmap(pictureBox1.Width, pictureBox1.Height);
+            Graphics graphics = Graphics.FromImage(pictureBox1.Image);
+            graphics.Clear(Color.AliceBlue);
+            Draw();
         }
     }
 }
